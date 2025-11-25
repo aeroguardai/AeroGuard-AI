@@ -4,7 +4,8 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "prepare_data": "python3 prepare_data.py"
   },
   "dependencies": {
     "axios": "^1.6.0",
@@ -14,8 +15,3 @@
     "@supabase/supabase-js": "^2.36.0"
   }
 }
-"scripts": {
-    "start": "node src/index.js",
-    "prepare_data": "python3 prepare_data.py"
-}
-
