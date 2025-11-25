@@ -1,39 +1,50 @@
-import pandas as pd
-import numpy as np
+import json
+import os
 
-# ---------------------------
-# 1. Load Raw Sample Data
-# ---------------------------
+# -----------------------
+# 1. Create output folder
+# -----------------------
+output_dir = "data"
+os.makedirs(output_dir, exist_ok=True)
 
-df = pd.read_csv("sample_aircraft_data.csv")
 
-# ---------------------------
-# 2. Clean the data
-# ---------------------------
+# -----------------------
+# 2. Create sample aircraft sensor dataset
+# -----------------------
+aircraft_data = [
+    {
+        "aircraft_id": "A320-001",
+        "engine_temp": 615,
+        "vibration_level": 3.1,
+        "oil_pressure": 42,
+        "flight_hours": 1870,
+        "fault_code": None
+    },
+    {
+        "aircraft_id": "A320-002",
+        "engine_temp": 699,
+        "vibration_level": 6.8,
+        "oil_pressure": 33,
+        "flight_hours": 2500,
+        "fault_code": "ENG-OVERHEAT"
+    },
+    {
+        "aircraft_id": "B737-101",
+        "engine_temp": 580,
+        "vibration_level": 2.5,
+        "oil_pressure": 48,
+        "flight_hours": 1650,
+        "fault_code": None
+    }
+]
 
-# Remove missing values
-df = df.dropna()
 
-# Remove unrealistic sensor values
-df = df[(df["engine_temp"] > 0) & (df["engine_temp"] < 1500)]
-df = df[(df["vibration"] >= 0) & (df["vibration"] < 100)]
+# -----------------------
+# 3. Write file to /data/
+# -----------------------
+output_file = os.path.join(output_dir, "aircraft_sample_data.json")
 
-# Convert timestamps
-df["timestamp"] = pd.to_datetime(df["timestamp"])
+with open(output_file, "w") as f:
+    json.dump(aircraft_data, f, indent=4)
 
-# ---------------------------
-# 3. Feature Engineering
-# ---------------------------
-
-df["temp_rise_rate"] = df["engine_temp"].diff()
-df["vibration_change"] = df["vibration"].diff()
-
-df = df.fillna(0)
-
-# ---------------------------
-# 4. Save processed data
-# ---------------------------
-
-df.to_csv("processed_aircraft_data.csv", index=False)
-
-print("Data cleaned and processed! Saved to processed_aircraft_data.csv")
+print(f"✔ Data file created successfully: {output_file}")
