@@ -1,22 +1,39 @@
 import pandas as pd
-import random
-import datetime
+import numpy as np
 
-# Create fake aircraft telemetry
-data = []
+# ---------------------------
+# 1. Load Raw Sample Data
+# ---------------------------
 
-for i in range(20):
-    entry = {
-        "timestamp": datetime.datetime.now() - datetime.timedelta(minutes=i*5),
-        "engine_temp": random.randint(200, 700),
-        "vibration": round(random.uniform(0.1, 5.0), 2),
-        "fuel_flow": random.randint(400, 950),
-        "pressure": random.randint(20, 60)
-    }
-    data.append(entry)
+df = pd.read_csv("sample_aircraft_data.csv")
 
-df = pd.DataFrame(data)
-df.to_csv("sample_aircraft_data.csv", index=False)
+# ---------------------------
+# 2. Clean the data
+# ---------------------------
 
-print("Sample data created: sample_aircraft_data.csv")
+# Remove missing values
+df = df.dropna()
 
+# Remove unrealistic sensor values
+df = df[(df["engine_temp"] > 0) & (df["engine_temp"] < 1500)]
+df = df[(df["vibration"] >= 0) & (df["vibration"] < 100)]
+
+# Convert timestamps
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+# ---------------------------
+# 3. Feature Engineering
+# ---------------------------
+
+df["temp_rise_rate"] = df["engine_temp"].diff()
+df["vibration_change"] = df["vibration"].diff()
+
+df = df.fillna(0)
+
+# ---------------------------
+# 4. Save processed data
+# ---------------------------
+
+df.to_csv("processed_aircraft_data.csv", index=False)
+
+print("Data cleaned and processed! Saved to processed_aircraft_data.csv")
