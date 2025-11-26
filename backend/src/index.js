@@ -3,6 +3,9 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import chatRoutes from './routes/chat.routes.js';
 import anomalyRoutes from './routes/anomaly.routes.js';
+app.use('/api', chatRoutes);
+app.use('/api/anomaly', anomalyRoutes);
+
 
 dotenv.config();
 
