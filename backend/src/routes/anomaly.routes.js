@@ -3,6 +3,6 @@ import { detectAnomaly } from '../controllers/anomaly.controller.js';
 
 const router = express.Router();
 
-router.post('/', detectAnomaly);
+router.post('/predict', detectAnomaly);
 
 export default router;
