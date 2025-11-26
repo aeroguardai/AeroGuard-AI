@@ -2,20 +2,36 @@ export const detectAnomaly = async (req, res) => {
   try {
     const { engine_temp, oil_pressure, vibration, flight_hours } = req.body;
 
-    // Simple rule-based fallback model
-    const isAnomaly =
+    if (
+      engine_temp === undefined ||
+      oil_pressure === undefined ||
+      vibration === undefined ||
+      flight_hours === undefined
+    ) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // RULE-BASED ANOMALY PREDICTOR
+    let anomaly = 0;
+    let message = "Aircraft is healthy.";
+
+    // CRITICAL ANOMALY → anomaly = 1
+    if (
       engine_temp > 600 ||
       oil_pressure < 40 ||
-      vibration > 1.5 ||
-      flight_hours > 2000;
+      vibration > 1.5
+    ) {
+      anomaly = 1;
+      message = "Critical anomaly detected! Immediate maintenance required.";
+    }
 
     return res.json({
-      anomaly: isAnomaly ? 1 : 0,
-      message: isAnomaly ? "Anomaly detected" : "Normal"
+      anomaly,
+      message,
+      received: { engine_temp, oil_pressure, vibration, flight_hours },
     });
 
   } catch (error) {
-    console.error("Anomaly error:", error);
-    res.status(500).json({ error: "Server error detecting anomaly" });
+    res.status(500).json({ error: "Server error" });
   }
 };
