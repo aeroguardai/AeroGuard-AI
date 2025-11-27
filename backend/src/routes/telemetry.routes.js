@@ -1,9 +1,9 @@
-// telemetry.routes.js
-import express from "express";
-import { getTelemetry } from "../controllers/telemetry.controller.js";
+import express from 'express';
+import { getTelemetry } from '../controllers/telemetry.controller.js';
 
 const router = express.Router();
 
-router.get("/", getTelemetry);
+// GET /api/telemetry
+router.get('/', getTelemetry);
 
 export default router;
