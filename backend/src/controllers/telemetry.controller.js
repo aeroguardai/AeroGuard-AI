@@ -1,19 +1,16 @@
-// simple example returning last N rows from an in-memory array or DB
-import { supabase } from '../config/supabase.js';
-
-export const getLatestTelemetry = async (req, res) => {
+export const getTelemetry = (req, res) => {
   try {
-    // if you saved telemetry in supabase table 'telemetry', query last 200 rows:
-    const { data, error } = await supabase
-      .from('telemetry')
-      .select('*')
-      .order('timestamp', { ascending: false })
-      .limit(200);
-    if (error) return res.status(500).json({ error: error.message });
-    // send newest-first -> we want oldest-first in UI, so reverse and return
-    res.json((data || []).reverse());
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    const sampleData = {
+      engine_temp: 580 + Math.random() * 40,
+      oil_pressure: 40 + Math.random() * 5,
+      vibration: 0.5 + Math.random() * 1.5,
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(sampleData);
+
+  } catch (err) {
+    console.error("Telemetry Error:", err);
+    res.status(500).json({ error: "Telemetry fetch failed" });
   }
 };
-
