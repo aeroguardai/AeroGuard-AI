@@ -1,9 +1,19 @@
-// telemetry.routes.js
-import express from 'express';
-import { getTelemetry } from '../controllers/telemetry.controller.js';
+import express from "express";
+import {
+  postTelemetry,
+  getLatestTelemetry,
+  getTelemetryHistory
+} from "../controllers/telemetry.controller.js";
 
 const router = express.Router();
 
-router.get('/', getTelemetry);
+// POST telemetry
+router.post("/", postTelemetry);
+
+// GET latest row
+router.get("/latest", getLatestTelemetry);
+
+// GET history
+router.get("/history", getTelemetryHistory);
 
 export default router;
