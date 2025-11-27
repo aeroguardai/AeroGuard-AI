@@ -7,24 +7,27 @@ import anomalyRoutes from './routes/anomaly.routes.js';
 import telemetryRoutes from './routes/telemetry.routes.js';
 
 dotenv.config();
-const app = express();
 
+const app = express();
 const PORT = process.env.PORT || 8080;
 
-app.use(cors({ origin: process.env.FRONTEND_URL }));
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true
+}));
+
 app.use(express.json());
 
-// Root endpoint
+// HEALTH CHECK
 app.get('/', (req, res) => {
   res.send('AeroGuard AI Backend is running');
 });
 
-// API routes
+// ROUTES
 app.use('/api', chatRoutes);
 app.use('/api/anomaly', anomalyRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 
-// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
