@@ -1,59 +1,55 @@
 import { supabase } from '../config/supabaseClient.js';
 
+// POST telemetry
 export const postTelemetry = async (req, res) => {
-  try {
-    const { engine_temp, oil_pressure, vibration, flight_hours } = req.body;
+  const { engine_temp, oil_pressure, vibration, flight_hours } = req.body;
 
-    const { data, error } = await supabase
-      .from("telemetry")
-      .insert([
-        {
-          engine_temp,
-          oil_pressure,
-          vibration,
-          flight_hours,
-          timestamp: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ])
-      .select();
+  const { data, error } = await supabase
+    .from('telemetry')
+    .insert([
+      {
+        engine_temp,
+        oil_pressure,
+        vibration,
+        flight_hours,
+        created_at: new Date().toISOString(),
+      },
+    ])
+    .select()
+    .single();
 
-    if (error) throw error;
-
-    res.json({ success: true, data });
-  } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+  if (error) {
+    return res.status(400).json({ success: false, error });
   }
+  return res.json({ success: true, data });
 };
 
+// GET latest telemetry (ONLY ONE ROW)
 export const getLatestTelemetry = async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from("telemetry")
-      .select("*")
-      .order("timestamp", { ascending: false })
-      .limit(1)
-      .single();
+  const { data, error } = await supabase
+    .from('telemetry')
+    .select('*')
+    .order('id', { ascending: false })
+    .limit(1)
+    .single();  // <-- THIS FIXES THE ERROR
 
-    if (error) throw error;
-
-    res.json({ success: true, data });
-  } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+  if (error) {
+    return res.status(400).json({ success: false, error });
   }
+
+  return res.json({ success: true, data });
 };
 
+// GET telemetry history (multiple rows)
 export const getTelemetryHistory = async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from("telemetry")
-      .select("*")
-      .order("timestamp", { ascending: true });
+  const { data, error } = await supabase
+    .from('telemetry')
+    .select('*')
+    .order('id', { ascending: false });
 
-    if (error) throw error;
-
-    res.json({ success: true, data });
-  } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+  if (error) {
+    return res.status(400).json({ success: false, error });
   }
+
+  return res.json({ success: true, data });
 };
