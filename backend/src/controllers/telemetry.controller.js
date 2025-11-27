@@ -1,4 +1,4 @@
-import { supabase } from "../config/supabaseClient.js";
+import { supabase } from '../config/supabaseClient.js';
 
 export const postTelemetry = async (req, res) => {
   try {
