@@ -1,6 +1,6 @@
 import { supabase } from '../config/supabaseClient.js';
 
-// POST telemetry
+// ✅ Store incoming telemetry
 export const postTelemetry = async (req, res) => {
   const { engine_temp, oil_pressure, vibration, flight_hours } = req.body;
 
@@ -12,44 +12,38 @@ export const postTelemetry = async (req, res) => {
         oil_pressure,
         vibration,
         flight_hours,
-        created_at: new Date().toISOString(),
-      },
-    ])
-    .select()
-    .single();
+        created_at: new Date().toISOString()
+      }
+    ]);
 
-  if (error) {
-    return res.status(400).json({ success: false, error });
-  }
-  return res.json({ success: true, data });
+  if (error) return res.status(400).json({ success: false, error: error.message });
+  res.json({ success: true, data });
 };
 
-// GET latest telemetry (ONLY ONE ROW)
+// ✅ Fetch latest telemetry record
 export const getLatestTelemetry = async (req, res) => {
   const { data, error } = await supabase
     .from('telemetry')
     .select('*')
     .order('id', { ascending: false })
-    .limit(1)
-    .single();  // <-- THIS FIXES THE ERROR
+    .limit(1);
 
-  if (error) {
-    return res.status(400).json({ success: false, error });
-  }
+  if (error) return res.status(400).json({ success: false, error: error.message });
 
-  return res.json({ success: true, data });
+  res.json({
+    success: true,
+    data: data.length ? data[0] : null
+  });
 };
 
-// GET telemetry history (multiple rows)
+// ✅ Fetch history (optional)
 export const getTelemetryHistory = async (req, res) => {
   const { data, error } = await supabase
     .from('telemetry')
     .select('*')
-    .order('id', { ascending: false });
+    .order('id', { ascending: false })
+    .limit(50);
 
-  if (error) {
-    return res.status(400).json({ success: false, error });
-  }
-
-  return res.json({ success: true, data });
+  if (error) return res.status(400).json({ success: false, error: error.message });
+  res.json({ success: true, data });
 };
