@@ -1,68 +1,42 @@
-export const detectAnomaly = (req, res) => {
-  const { engine_temp, oil_pressure, vibration, flight_hours } = req.body;
+// anomaly.controller.js
+import { supabase } from '../config/supabase.js';
+import { log } from '../utils/logger.js';
 
-  if (
-    engine_temp === undefined ||
-    oil_pressure === undefined ||
-    vibration === undefined ||
-    flight_hours === undefined
-  ) {
-    return res.status(400).json({ error: "Missing input fields" });
+// Simple rule-based anomaly detection (starter). Replace with model later.
+export const detectAnomaly = async (req, res) => {
+  try {
+    const payload = req.body; // expect same fields as telemetry
+    if (!payload) return res.status(400).json({ error: 'no payload' });
+
+    // Very simple heuristics — tune per your dataset:
+    const temp = Number(payload.engine_temp || 0);
+    const vibration = Number(payload.vibration || 0);
+    const pressure = Number(payload.oil_pressure || 0);
+
+    let anomaly = false;
+    let reason = [];
+
+    if (temp > 600) { anomaly = true; reason.push('High engine temp'); }
+    if (vibration > 1.5) { anomaly = true; reason.push('High vibration'); }
+    if (pressure < 35) { anomaly = true; reason.push('Low oil pressure'); }
+
+    const result = {
+      anomaly,
+      reasons: reason,
+      score: anomaly ? 0.9 : 0.1,
+      timestamp: new Date().toISOString()
+    };
+
+    // persist alert (optional)
+    await supabase.from('alerts').insert([{
+      ...result,
+      payload,
+      created_at: new Date().toISOString()
+    }]);
+
+    return res.json({ success: true, result });
+  } catch (err) {
+    log('detectAnomaly error ' + err);
+    return res.status(500).json({ error: 'server error' });
   }
-
-  // Engine Temperature Score
-  let temp_score = 0;
-  if (engine_temp > 580 && engine_temp <= 650) {
-    temp_score = ((engine_temp - 580) / 70) * 20; // 0–20
-  } else if (engine_temp > 650) {
-    temp_score = 25;
-  }
-
-  // Oil Pressure Score
-  let oil_score = 0;
-  if (oil_pressure >= 40) {
-    oil_score = 0;
-  } else if (oil_pressure >= 30 && oil_pressure < 40) {
-    oil_score = 20;
-  } else if (oil_pressure < 30) {
-    oil_score = 40;
-  }
-
-  // Vibration Score (most important)
-  let vib_score = vibration * 25;
-  if (vib_score > 35) vib_score = 35; // cap
-
-  // Flight Hours Score (small impact)
-  let hours_score = (flight_hours / 2000) * 10;
-  if (hours_score > 10) hours_score = 10;
-
-  // Final Score
-  const score = Math.round(
-    temp_score * 0.3 +
-    oil_score * 0.3 +
-    vib_score * 0.35 +
-    hours_score * 0.05
-  );
-
-  // Anomaly decision
-  const anomaly = score > 50 ? 1 : 0;
-
-  // Severity
-  let severity = "Low";
-  if (score >= 30 && score <= 60) severity = "Medium";
-  if (score > 60) severity = "High";
-
-  // Recommendation
-  let recommendation = "No issues detected.";
-  if (severity === "Medium")
-    recommendation = "Schedule maintenance — abnormal patterns identified.";
-  if (severity === "High")
-    recommendation = "Immediate inspection required — high-risk anomaly detected.";
-
-  return res.json({
-    anomaly,
-    score,
-    severity,
-    recommendation,
-  });
 };
