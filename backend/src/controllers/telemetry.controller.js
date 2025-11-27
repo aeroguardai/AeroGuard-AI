@@ -1,76 +1,62 @@
-import dotenv from "dotenv";
-import pkg from "@supabase/supabase-js";
+// backend/src/controllers/telemetry.controller.js
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
 dotenv.config();
-const { createClient } = pkg;
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-// -----------------------------------------------
-// POST /api/telemetry  → add new telemetry data
-// -----------------------------------------------
-export async function postTelemetry(req, res) {
+// POST: store telemetry
+export const postTelemetry = async (req, res) => {
   try {
-    const { engine_temp, oil_pressure, vibration, flight_hours } = req.body;
+    const data = req.body;
 
-    const { data, error } = await supabase
-      .from("telemetry")
+    const { error } = await supabase
+      .from('telemetry')
       .insert([
         {
-          engine_temp,
-          oil_pressure,
-          vibration,
-          flight_hours,
-          updated_at: new Date().toISOString()
-        }
-      ])
-      .select();
+          engine_temp: data.engine_temp,
+          oil_pressure: data.oil_pressure,
+          vibration: data.vibration,
+          flight_hours: data.flight_hours,
+          created_at: new Date().toISOString(),
+        },
+      ]);
 
-    if (error) return res.status(400).json({ success: false, error });
+    if (error) return res.status(500).json({ success: false, message: error.message });
 
-    res.json({ success: true, data });
+    res.json({ success: true, message: "Telemetry stored" });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
-}
+};
 
-// -----------------------------------------------------
-// GET /api/telemetry/latest → fetch latest telemetry row
-// -----------------------------------------------------
-export async function getLatestTelemetry(req, res) {
+// GET: fetch latest telemetry
+export const getLatestTelemetry = async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from("telemetry")
-      .select("*")
-      .order("updated_at", { ascending: false })
+      .from('telemetry')
+      .select('*')
+      .order('created_at', { ascending: false })
       .limit(1);
 
-    if (error) return res.status(400).json({ success: false, error });
+    if (error) return res.status(500).json({ success: false, message: error.message });
 
     res.json({ success: true, data: data[0] });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
-}
+};
 
-// ------------------------------------------------------------
-// GET /api/telemetry/history → last 50 telemetry logs (chart)
-// ------------------------------------------------------------
-export async function getTelemetryHistory(req, res) {
+// GET: full telemetry history
+export const getTelemetryHistory = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from("telemetry")
-      .select("*")
-      .order("updated_at", { ascending: false })
-      .limit(50);
+    const { data, error } = await supabase.from('telemetry').select('*').order('created_at', { ascending: false });
 
-    if (error) return res.status(400).json({ success: false, error });
+    if (error) return res.status(500).json({ success: false, message: error.message });
 
     res.json({ success: true, data });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
-}
+};
