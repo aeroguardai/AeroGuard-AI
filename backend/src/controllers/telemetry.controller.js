@@ -43,6 +43,8 @@ export const getLatestTelemetry = async (req, res) => {
     }
 
     res.json({ success: true, data: data[0] });
+
+    
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
