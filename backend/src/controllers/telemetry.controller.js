@@ -1,49 +1,49 @@
-import { supabase } from '../config/supabaseClient.js';
+import supabase from "../config/supabaseClient.js";
 
-// ✅ Store incoming telemetry
 export const postTelemetry = async (req, res) => {
-  const { engine_temp, oil_pressure, vibration, flight_hours } = req.body;
+  try {
+    const { engine_temp, oil_pressure, vibration, flight_hours } = req.body;
 
-  const { data, error } = await supabase
-    .from('telemetry')
-    .insert([
-      {
-        engine_temp,
-        oil_pressure,
-        vibration,
-        flight_hours,
-        created_at: new Date().toISOString()
-      }
-    ]);
+    const { data, error } = await supabase
+      .from("telemetry")
+      .insert([
+        {
+          engine_temp,
+          oil_pressure,
+          vibration,
+          flight_hours,
+          created_at: new Date().toISOString()
+        }
+      ])
+      .select();
 
-  if (error) return res.status(400).json({ success: false, error: error.message });
-  res.json({ success: true, data });
+    if (error) throw error;
+
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
-// ✅ Fetch latest telemetry record
 export const getLatestTelemetry = async (req, res) => {
-  const { data, error } = await supabase
-    .from('telemetry')
-    .select('*')
-    .order('id', { ascending: false })
-    .limit(1);
+  try {
+    const { data, error } = await supabase
+      .from("telemetry")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-  if (error) return res.status(400).json({ success: false, error: error.message });
+    if (error) throw error;
 
-  res.json({
-    success: true,
-    data: data.length ? data[0] : null
-  });
-};
+    if (!data || data.length === 0) {
+      return res.json({
+        success: false,
+        error: "No telemetry data found in Supabase."
+      });
+    }
 
-// ✅ Fetch history (optional)
-export const getTelemetryHistory = async (req, res) => {
-  const { data, error } = await supabase
-    .from('telemetry')
-    .select('*')
-    .order('id', { ascending: false })
-    .limit(50);
-
-  if (error) return res.status(400).json({ success: false, error: error.message });
-  res.json({ success: true, data });
+    res.json({ success: true, data: data[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
