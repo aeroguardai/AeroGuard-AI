@@ -1,37 +1,32 @@
-import axios from "axios";
-
 export const detectAnomaly = async (req, res) => {
   try {
-    const telemetry = req.body;
+    const { engine_temp, oil_pressure, vibration } = req.body;
 
-    // Send data to your HF model
-    const response = await axios.post(
-      "https://api-inference.huggingface.co/models/aiAeroGuard/Aeroguard-Model",
-      telemetry,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.HF_API_KEY}`
-        },
-        timeout: 5000
-      }
-    );
+    let anomaly = 0;
 
-    const prediction = response.data?.anomaly ?? 0;
+    // Simple threshold-based anomaly detection
+    if (
+      engine_temp > 600 ||
+      oil_pressure < 38 ||
+      vibration > 1.5
+    ) {
+      anomaly = 1;
+    }
 
-    res.json({
+    return res.json({
       success: true,
-      anomaly: prediction,
+      anomaly,
       message:
-        prediction === 1
+        anomaly === 1
           ? "⚠️ Anomaly detected — maintenance required!"
           : "✅ Aircraft healthy — no anomaly detected."
     });
 
   } catch (error) {
-    console.error(error.message);
+    console.error(error);
     return res.status(500).json({
       success: false,
-      error: "Model inference failed"
+      error: "Anomaly detection failed"
     });
   }
 };
